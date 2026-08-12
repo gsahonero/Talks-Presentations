@@ -6,10 +6,12 @@ using CUDA
 sys = Scanner()
 
 # change us to a different integer value for more spins. Beware, us=6 produces 3M spins
-phantom = brain_phantom2D(us = 1)
+phantom = brain_phantom2D(us = 2)
 
 # we read the pulseq file produced by PyPulseq T1w/T2w.ipynb
 seq = read_seq("gre_pypulseq.seq")
+plot_seq(seq)
+plot_seq(seq[1:10])
 
 sim_params = Dict("return_type" => "mat", "method" => Bloch())
 
@@ -29,14 +31,14 @@ nADC = 8192         # number of acquisition samples
 durADC = 250e-3     # duration of the acquisition
 delay_time =  1e-3  # small delay
 acq = ADC(nADC, durADC, delay_time);
-
+exc = KomaMRI.PulseDesigner.RF_hard(10e-6, 1e-3, sys)
 seq = Sequence()  # empty sequence
 @addblock seq += exc  # adding RF-only block
 @addblock seq += acq  # adding ADC-only block
 p1 = plot_seq(seq; slider=false, height=300)
 
 obj = Phantom(x=[0.], T1=[1000e-3], T2=[100e-3]);
-raw = @suppress simulate(obj, seq, sys);
+raw = simulate(phantom, seq, sys);
 p2 = plot_signal(raw; slider=false, height=300)
 
 ## Modifying the phantom and observing the effects on the simulation
